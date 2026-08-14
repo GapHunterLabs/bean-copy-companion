@@ -63,22 +63,27 @@ class TargetAssignerTest : BasePlatformTestCase() {
     }
 
     /**
-     * Real duplication found live (runIde, 2026-08-13): a constructor
-     * param with no matching source field showed up TWICE in the
-     * generated file -- once as its own inline TODO next to the
-     * [ConstructorArg.Placeholder], and again as a separate standalone
-     * TODO from [dev.gaphunter.beancopycompanion.model.CopyPlan.unmapped]
-     * repeating the exact same field. `plan.unmapped` must not repeat a
-     * field name already covered by a Placeholder.
+     * `plan.unmapped` is the caller's source of truth for "how many
+     * fields still need attention" (see [dev.gaphunter.beancopycompanion.actions.GenerateBeanCopyAction]'s
+     * notification text) -- it must KEEP a field even when it's also
+     * covered by a [ConstructorArg.Placeholder], or that count silently
+     * lies. Real regression found live (runIde, 2026-08-13): an earlier
+     * version of this method dropped such fields from `unmapped` to
+     * avoid a duplicate comment in the generated file, which instead
+     * made the plugin's own notification claim "all fields mapped" when
+     * one genuinely still needed a manual fill-in. The duplicate-text
+     * problem is fixed at the RENDERING layer instead -- see
+     * `CopierWriterTest.testUnmappedFieldCoveredByAConstructorPlaceholderIsNotRepeatedInTheGeneratedText` --
+     * never by hiding the field from this count.
      */
-    fun testFieldCoveredByAConstructorPlaceholderIsNotAlsoListedInUnmapped() {
+    fun testFieldCoveredByAConstructorPlaceholderIsStillCountedInUnmapped() {
         val source = classOf(myFixture.addFileToProject("S3b.kt", "class S3b(val a: String)"))
         val target = classOf(myFixture.addFileToProject("T3b.kt", "data class T3b(val a: String, val b: Int)"))
 
         val plan = TargetAssigner.assign(source, target, FieldMatcher.match(source, target))
 
         assertTrue(plan.constructorArgs.any { it is ConstructorArg.Placeholder && it.paramName == "b" })
-        assertTrue("'b' should only appear as a constructor-arg TODO, not also in plan.unmapped", plan.unmapped.none { it.targetField.name == "b" })
+        assertTrue("'b' must still be counted in plan.unmapped even though a Placeholder also covers it", plan.unmapped.any { it.targetField.name == "b" })
     }
 
     fun testConstructorParameterWithNoSourceFieldBecomesAPlaceholder() {

@@ -217,4 +217,42 @@ class CopierWriterTest : BasePlatformTestCase() {
         // real, separate argument -- not swallowed into the TODO comment.
         assertTrue(rendered.text.contains("this.getTotal()"))
     }
+
+    /**
+     * Real regression found live (`runIde`, 2026-08-13) in the demo's
+     * own hero scenario (`Order` -> `OrderDto`): the standalone
+     * unmapped-fields loop printed a SECOND `// TODO` for 'customer',
+     * identical in meaning to the one already inline in the
+     * constructor call -- same information, twice, in the same file.
+     * Text must appear exactly once; the field must still be counted
+     * in `plan.unmapped` (see `TargetAssignerTest.
+     * testFieldCoveredByAConstructorPlaceholderIsStillCountedInUnmapped`
+     * for why the COUNT must never be the thing that changes).
+     */
+    fun testUnmappedFieldCoveredByAConstructorPlaceholderIsNotRepeatedInTheGeneratedText() {
+        val source = classOf(myFixture.addFileToProject(
+            "JS8.java",
+            """
+            public class JS8 {
+                private long id;
+                private double total;
+                public long getId() { return id; }
+                public double getTotal() { return total; }
+            }
+            """.trimIndent(),
+        ))
+        val target = classOf(myFixture.addFileToProject(
+            "KT8.kt",
+            """
+            data class KT8(val id: Long, val customer: String, val total: Double)
+            """.trimIndent(),
+        ))
+
+        val plan = TargetAssigner.assign(source, target, FieldMatcher.match(source, target))
+        assertTrue("'customer' must still be counted for the caller's notification", plan.unmapped.any { it.targetField.name == "customer" })
+
+        val rendered = CopierWriter.render(plan, null)
+        val occurrences = Regex("'customer'").findAll(rendered.text).count()
+        assertEquals("'customer' should be mentioned exactly once in the generated text, not repeated", 1, occurrences)
+    }
 }
