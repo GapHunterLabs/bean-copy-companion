@@ -6,7 +6,7 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.LangDataKeys
+import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.DumbService
@@ -16,6 +16,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassOwner
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.PsiManager
 import dev.gaphunter.beancopycompanion.generate.CopierWriter
 import dev.gaphunter.beancopycompanion.generate.InMemoryValidator
 import dev.gaphunter.beancopycompanion.match.FieldMatcher
@@ -135,11 +136,23 @@ class GenerateBeanCopyAction : AnAction() {
      * what gets used, no separate dialog-driven search flow to get
      * subtly wrong. A same-directory 2-file selection matches how a
      * developer already thinks of "these two DTOs" in the Project tree.
+     *
+     * Uses [CommonDataKeys.VIRTUAL_FILE_ARRAY] + [PsiManager.findFile],
+     * NOT `LangDataKeys.PSI_ELEMENT_ARRAY` -- confirmed live in a real
+     * runIde sandbox (2026-08-13) that the Project view's multi-selection
+     * DataContext does not populate that key at all (the action stayed
+     * permanently disabled, guessed-but-never-verified API usage, exactly
+     * the kind of mistake `CLAUDE.md` warns about relying on compile
+     * success alone to confirm). `VIRTUAL_FILE_ARRAY` is the more
+     * fundamental, universally-populated key for "files selected in a
+     * tree" across the whole platform.
      */
     private fun resolveTwoClasses(e: AnActionEvent): Pair<PsiClass, PsiClass>? {
-        val elements = e.getData(LangDataKeys.PSI_ELEMENT_ARRAY) ?: return null
-        if (elements.size != 2) return null
-        val classes = elements.mapNotNull { (it as? PsiClassOwner)?.classes?.firstOrNull() }
+        val project = e.project ?: return null
+        val files = e.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY) ?: return null
+        if (files.size != 2) return null
+        val psiManager = PsiManager.getInstance(project)
+        val classes = files.mapNotNull { vf -> (psiManager.findFile(vf) as? PsiClassOwner)?.classes?.firstOrNull() }
         if (classes.size != 2) return null
         return classes[0] to classes[1]
     }
