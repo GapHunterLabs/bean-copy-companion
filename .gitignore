@@ -6,3 +6,6 @@
 bin
 build
 node_modules
+demo/.gradle
+demo/build
+demo/.idea
