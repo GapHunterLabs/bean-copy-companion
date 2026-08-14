@@ -175,4 +175,46 @@ class CopierWriterTest : BasePlatformTestCase() {
         assertNull("expected no syntax error, got: $error", error)
         assertTrue(rendered.text.contains("TODO(bean-copy): no source value for constructor param 'b'"))
     }
+
+    /**
+     * Real regression, found live in a runIde sandbox (2026-08-13), not
+     * by any test that existed before this one: [testConstructorPlaceholderForAnUncoveredParamStillValidates]
+     * only ever put the placeholder LAST in the constructor's parameter
+     * list, where the old (buggy) comma-after-every-line rendering
+     * never actually appended a trailing separator. The real demo
+     * scenario (Java `Order` -> Kotlin `OrderDto`) has the unmapped
+     * param in the MIDDLE (`id`, `customer`, `total`) -- exactly the
+     * shape that exposed the bug: the separator comma landed inside the
+     * placeholder's own `// TODO` line comment, invisible to the
+     * parser, and `InMemoryValidator` correctly refused to write it
+     * ("Expecting ','"). This test pins the middle-placeholder shape
+     * specifically so this exact class of bug can't recur silently.
+     */
+    fun testConstructorPlaceholderInTheMiddleOfTheArgumentListStillValidates() {
+        val source = classOf(myFixture.addFileToProject(
+            "JS7.java",
+            """
+            public class JS7 {
+                private long id;
+                private double total;
+                public long getId() { return id; }
+                public double getTotal() { return total; }
+            }
+            """.trimIndent(),
+        ))
+        val target = classOf(myFixture.addFileToProject(
+            "KT7.kt",
+            """
+            data class KT7(val id: Long, val customer: String, val total: Double)
+            """.trimIndent(),
+        ))
+
+        val (rendered, error) = renderAndValidate(source, target)
+
+        assertNull("expected no syntax error, got: $error", error)
+        assertTrue(rendered.text.contains("TODO(bean-copy): no source value for constructor param 'customer'"))
+        // The line right after the placeholder (the 'total' arg) must be a
+        // real, separate argument -- not swallowed into the TODO comment.
+        assertTrue(rendered.text.contains("this.getTotal()"))
+    }
 }

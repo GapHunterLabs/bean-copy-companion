@@ -152,6 +152,17 @@ object TargetAssigner {
             }
         }
 
-        return CopyPlan(sourceClass, targetClass, ConstructionStrategy.CONSTRUCTOR, constructorArgs, mapped, matchResult.unmatched + extraUnmapped)
+        // A field that couldn't be matched at all (matchResult.unmatched)
+        // AND is also a constructor parameter already shows up as a
+        // ConstructorArg.Placeholder, with its own inline TODO right at
+        // the call site -- repeating it again in the standalone TODO
+        // list below would just say the same thing twice. Real
+        // duplication found live (runIde, 2026-08-13): the demo's
+        // OrderDto(customer: String) case showed 'customer' flagged
+        // both inline and at the end.
+        val placeholderParamNames = constructorArgs.filterIsInstance<ConstructorArg.Placeholder>().map { it.paramName }.toSet()
+        val dedupedUnmatched = matchResult.unmatched.filter { it.targetField.name !in placeholderParamNames }
+
+        return CopyPlan(sourceClass, targetClass, ConstructionStrategy.CONSTRUCTOR, constructorArgs, mapped, dedupedUnmatched + extraUnmapped)
     }
 }

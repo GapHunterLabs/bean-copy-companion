@@ -62,6 +62,25 @@ class TargetAssignerTest : BasePlatformTestCase() {
         assertTrue(plan.unmapped.isEmpty())
     }
 
+    /**
+     * Real duplication found live (runIde, 2026-08-13): a constructor
+     * param with no matching source field showed up TWICE in the
+     * generated file -- once as its own inline TODO next to the
+     * [ConstructorArg.Placeholder], and again as a separate standalone
+     * TODO from [dev.gaphunter.beancopycompanion.model.CopyPlan.unmapped]
+     * repeating the exact same field. `plan.unmapped` must not repeat a
+     * field name already covered by a Placeholder.
+     */
+    fun testFieldCoveredByAConstructorPlaceholderIsNotAlsoListedInUnmapped() {
+        val source = classOf(myFixture.addFileToProject("S3b.kt", "class S3b(val a: String)"))
+        val target = classOf(myFixture.addFileToProject("T3b.kt", "data class T3b(val a: String, val b: Int)"))
+
+        val plan = TargetAssigner.assign(source, target, FieldMatcher.match(source, target))
+
+        assertTrue(plan.constructorArgs.any { it is ConstructorArg.Placeholder && it.paramName == "b" })
+        assertTrue("'b' should only appear as a constructor-arg TODO, not also in plan.unmapped", plan.unmapped.none { it.targetField.name == "b" })
+    }
+
     fun testConstructorParameterWithNoSourceFieldBecomesAPlaceholder() {
         val source = classOf(myFixture.addFileToProject("S3.kt", "class S3(val a: String)"))
         val target = classOf(myFixture.addFileToProject("T3.kt", "data class T3(val a: String, val b: Int)"))
