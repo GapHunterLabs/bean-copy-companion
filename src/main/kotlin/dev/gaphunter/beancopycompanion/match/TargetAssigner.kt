@@ -152,17 +152,18 @@ object TargetAssigner {
             }
         }
 
-        // A field that couldn't be matched at all (matchResult.unmatched)
-        // AND is also a constructor parameter already shows up as a
-        // ConstructorArg.Placeholder, with its own inline TODO right at
-        // the call site -- repeating it again in the standalone TODO
-        // list below would just say the same thing twice. Real
-        // duplication found live (runIde, 2026-08-13): the demo's
-        // OrderDto(customer: String) case showed 'customer' flagged
-        // both inline and at the end.
-        val placeholderParamNames = constructorArgs.filterIsInstance<ConstructorArg.Placeholder>().map { it.paramName }.toSet()
-        val dedupedUnmatched = matchResult.unmatched.filter { it.targetField.name !in placeholderParamNames }
-
-        return CopyPlan(sourceClass, targetClass, ConstructionStrategy.CONSTRUCTOR, constructorArgs, mapped, dedupedUnmatched + extraUnmapped)
+        // plan.unmapped deliberately keeps EVERY field that still needs
+        // attention, including ones already covered by a
+        // ConstructorArg.Placeholder -- it's the count the caller
+        // reports in its "N mapped, M unmapped" notification, and
+        // silently dropping an entry here would make that count lie
+        // (a real regression found live, 2026-08-13: dropping it here
+        // made the notification claim "all fields mapped" when
+        // 'customer' genuinely still needed a manual fill-in). Avoiding
+        // the DUPLICATE TEXT in the generated file is
+        // CopierWriter's job, not this one -- see its trailing-TODO
+        // loop, which skips a field already flagged inline by a
+        // Placeholder without changing what gets counted here.
+        return CopyPlan(sourceClass, targetClass, ConstructionStrategy.CONSTRUCTOR, constructorArgs, mapped, matchResult.unmatched + extraUnmapped)
     }
 }

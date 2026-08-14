@@ -9,6 +9,7 @@ import dev.gaphunter.beancopycompanion.model.ConstructorArg
 import dev.gaphunter.beancopycompanion.model.CopyPlan
 import dev.gaphunter.beancopycompanion.model.MappedField
 import dev.gaphunter.beancopycompanion.model.SourceAccess
+import dev.gaphunter.beancopycompanion.model.UnmappedField
 import dev.gaphunter.beancopycompanion.util.LanguageDetector
 
 data class RenderedCopier(val fileName: String, val text: String)
@@ -100,7 +101,7 @@ object CopierWriter {
             }
         }
 
-        for (unmapped in plan.unmapped) {
+        for (unmapped in fieldsNeedingAStandaloneComment(plan)) {
             body.append("        // TODO(bean-copy): '${unmapped.targetField.name}' -- ${unmapped.reason}\n")
         }
         body.append("        return $targetVar;\n")
@@ -168,7 +169,7 @@ object CopierWriter {
             }
         }
 
-        for (unmapped in plan.unmapped) {
+        for (unmapped in fieldsNeedingAStandaloneComment(plan)) {
             body.append("    // TODO(bean-copy): '${unmapped.targetField.name}' -- ${unmapped.reason}\n")
         }
         body.append("    return $targetVar\n")
@@ -190,6 +191,23 @@ object CopierWriter {
     }
 
     // -------------------------------------------------------- shared parts
+
+    /**
+     * [CopyPlan.unmapped] deliberately keeps every field needing
+     * attention (the caller counts it for its "N mapped, M unmapped"
+     * notification -- see `TargetAssigner.assignViaConstructor`'s KDoc
+     * for why that count must never silently drop an entry). But a
+     * field ALSO covered by a [ConstructorArg.Placeholder] already gets
+     * its own inline `// TODO` right at the constructor call site --
+     * printing a second, separate standalone comment for the exact same
+     * field would just repeat it. This filters ONLY the rendered text,
+     * never the plan's own counts. Real duplication found live
+     * (`runIde`, 2026-08-13).
+     */
+    private fun fieldsNeedingAStandaloneComment(plan: CopyPlan): List<UnmappedField> {
+        val placeholderNames = plan.constructorArgs.filterIsInstance<ConstructorArg.Placeholder>().map { it.paramName }.toSet()
+        return plan.unmapped.filter { it.targetField.name !in placeholderNames }
+    }
 
     private fun readExpr(access: SourceAccess, sourceIsKotlin: Boolean, generateKotlin: Boolean, receiver: String): String =
         when (access) {
