@@ -1,0 +1,53 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>dev.gaphunter.beancopycompanion</id>
+    <name>Bean Copy Companion</name>
+    <vendor>Gap Hunter Labs</vendor>
+    <description><![CDATA[
+        <p>Generates a real, compiling object-copy method between two Java
+        or Kotlin classes -- select exactly two class files in the
+        Project view, pick the copy direction, and get a new copier file
+        with fields matched by name and type. The #1 complaint against
+        the closest existing competitor in this space (a plugin with real
+        crash reports and a "does not support Kotlin" review) is exactly
+        what this plugin is built to not do: every field it can't safely
+        map (type mismatch, no matching name, no way to set it) becomes
+        an honest <code>// TODO</code> comment in the generated file
+        instead of a crash or a silently wrong copy. The generated text
+        is parsed against a throwaway in-memory PSI file and checked for
+        syntax errors before anything touches disk -- same discipline
+        already proven in this catalog's Test Scaffold Companion and
+        Refactor Simulator.</p>
+        <p>Real support for what the competitor lacks: Kotlin
+        <code>data class</code> targets (constructor-based, since
+        <code>val</code> properties have no setter), Java 17+
+        <code>record</code> targets (canonical constructor), and Lombok
+        <code>@Builder</code> targets -- all detected from the plain PSI
+        tree, no Lombok/Kotlin compiler plugin dependency required.</p>
+        <p>100% local -- no network call, no account, no telemetry. All
+        PSI analysis runs off the EDT; only the final file write touches
+        it, and only after validation already passed.</p>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
+
+    <depends>org.jetbrains.kotlin</depends>
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <supportsKotlinPluginMode supportsK2="true"/>
+    </extensions>
+
+    <actions>
+        <group id="BeanCopyCompanion.Actions" text="Bean Copy Companion" popup="true">
+            <action id="BeanCopyCompanion.GenerateCopier"
+                    class="dev.gaphunter.beancopycompanion.actions.GenerateBeanCopyAction"
+                    text="Generate Bean Copy Method"
+                    description="Generates a real, in-memory-validated field-copy method between the two selected classes -- fields matched by name and type, unmappable fields left as honest TODOs"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </group>
+    </actions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Bean Copy Companion" displayType="BALLOON"/>
+    </extensions>
+</idea-plugin>
