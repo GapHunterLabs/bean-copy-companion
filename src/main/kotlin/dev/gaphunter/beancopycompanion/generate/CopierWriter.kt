@@ -209,17 +209,32 @@ object CopierWriter {
         }
     }
 
+    /**
+     * Real bug found live (`runIde`, 2026-08-13, not caught by unit
+     * tests): the previous version joined argument lines with
+     * `joinToString(",\n")`, which appends the `,` separator AFTER each
+     * element's own text. A [ConstructorArg.Placeholder] line ends in a
+     * `// TODO` line comment -- so the separator comma landed INSIDE
+     * that comment (after the `//`), invisible to the parser, producing
+     * "Expecting ','" from [InMemoryValidator]. Existing unit test
+     * coverage only ever put the placeholder LAST in the argument list,
+     * where a trailing separator is never appended at all -- exactly
+     * why this slipped through to a live sandbox. Fixed by building the
+     * `,` into each line's own text (before the comment, never after),
+     * and joining with a plain newline.
+     */
     private fun renderConstructorArgs(args: List<ConstructorArg>, sourceIsKotlin: Boolean, generateKotlin: Boolean, receiver: String): String {
         val indent = if (generateKotlin) "        " else "            "
-        return args.joinToString(",\n") { arg ->
+        return args.mapIndexed { index, arg ->
+            val comma = if (index == args.lastIndex) "" else ","
             when (arg) {
-                is ConstructorArg.Mapped -> indent + readExpr(arg.mappedField.access, sourceIsKotlin, generateKotlin, receiver)
+                is ConstructorArg.Mapped -> indent + readExpr(arg.mappedField.access, sourceIsKotlin, generateKotlin, receiver) + comma
                 is ConstructorArg.Placeholder -> {
                     val comment = "// TODO(bean-copy): no source value for constructor param '${arg.paramName}' (${arg.paramType.presentableText})"
-                    indent + defaultValueFor(arg.paramType) + " $comment"
+                    indent + defaultValueFor(arg.paramType) + comma + " $comment"
                 }
             }
-        }
+        }.joinToString("\n")
     }
 
     /**
