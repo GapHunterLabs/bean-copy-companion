@@ -22,6 +22,7 @@ import dev.gaphunter.beancopycompanion.generate.InMemoryValidator
 import dev.gaphunter.beancopycompanion.match.FieldMatcher
 import dev.gaphunter.beancopycompanion.match.TargetAssigner
 import dev.gaphunter.beancopycompanion.model.CopyPlan
+import dev.gaphunter.beancopycompanion.review.ReviewPrompt
 import dev.gaphunter.beancopycompanion.util.LanguageDetector
 import org.jetbrains.kotlin.idea.KotlinLanguage
 
@@ -117,6 +118,10 @@ class GenerateBeanCopyAction : AnAction() {
             val language = if (targetIsKotlin) KotlinLanguage.INSTANCE else JavaLanguage.INSTANCE
             val psiFile: PsiFile = PsiFileFactory.getInstance(project).createFileFromText(fileName, language, text)
             directory.add(psiFile)
+            // Real success only -- the file actually got written to disk.
+            // Never counted for "already exists" (nothing new happened) or
+            // the earlier "no mappable fields" / syntax-check-failed branches.
+            ReviewPrompt.recordHit(project)
 
             val message = if (plan.unmapped.isEmpty()) {
                 "$fileName generated -- all ${plan.mapped.size} field(s) mapped."

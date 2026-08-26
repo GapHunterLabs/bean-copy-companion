@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+## [0.1.1]
+
+### Added
+
+- Review/star CTA: after 5 successful uses of Generate Bean Copy Method
+  (a real file written, not a cancelled dialog or a no-op), a one-time
+  notification asks whether to rate the plugin on Marketplace, with a
+  permanent "Don't ask again" option. Standard mechanism used
+  catalog-wide since 2026-08-24, adapted here for an action-based
+  plugin: threshold is 5 (not 10), since an explicit invocation is a
+  stronger signal than a passive finding.
+
 ## [0.1.0]
 
 ### Added
@@ -24,5 +36,6 @@
   `// TODO(bean-copy): ...` comment, never a guess and never a crash.
 - Generated file language always matches the target class's language.
 
-[Unreleased]: https://github.com/GapHunterLabs/bean-copy-companion/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/GapHunterLabs/bean-copy-companion/compare/0.1.1...HEAD
+[0.1.1]: https://github.com/GapHunterLabs/bean-copy-companion/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/GapHunterLabs/bean-copy-companion/commits/0.1.0
