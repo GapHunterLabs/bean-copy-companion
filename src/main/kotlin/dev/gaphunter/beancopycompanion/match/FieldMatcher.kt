@@ -25,8 +25,8 @@ data class FieldMatchResult(val candidates: List<FieldCandidate>, val unmatched:
 
 /**
  * Matches target fields to source fields by exact name + assignment-
- * compatible type, per CONSTITUTION.md's evidence for this plugin (real
- * competitor review: "不支持kotlin" -- no Kotlin support, and a real
+ * compatible type, per the real evidence this plugin was built from
+ * (real competitor review: "不支持kotlin" -- no Kotlin support, and a real
  * `PsiMethod.getProject()` NPE crash from generating against a field
  * that couldn't actually be read). Every target field either becomes a
  * [FieldCandidate] with a real, verified way to read the value, or an
@@ -171,8 +171,8 @@ object FieldMatcher {
      * `canonicalText` does NOT resolve to the fully-qualified name in a
      * lightweight test fixture without the full JDK indexed (prints
      * `"Integer"`, not `"java.lang.Integer"`), the exact same gotcha
-     * already documented for Test Scaffold Companion's assertion
-     * inference in `INTELLIJ_PLATFORM_KNOWLEDGE.md`. Scoped to only
+     * already hit for Test Scaffold Companion's assertion inference.
+     * Scoped to only
      * fire when exactly one side is a genuine [PsiPrimitiveType]
      * (a structural check, not a string comparison) so this never
      * accidentally treats two unrelated reference types that merely

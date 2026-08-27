@@ -33,10 +33,10 @@ import org.jetbrains.kotlin.idea.KotlinLanguage
  * modal-class-picker flow instead.
  *
  * All the real work (PSI walk, field matching, in-memory validation)
- * runs on a background thread via `executeOnPooledThread`, per
- * CONSTITUTION.md section 6 -- only the final `WriteCommandAction` that
- * actually creates the file touches the EDT, and only after validation
- * already passed. Same threading discipline already proven in Test
+ * runs on a background thread via `executeOnPooledThread` -- only the
+ * final `WriteCommandAction` that actually creates the file touches
+ * the EDT, and only after validation already passed. Same threading
+ * discipline already proven in Test
  * Scaffold Companion's `GenerateTestSkeletonAction` (that pattern was
  * confirmed necessary the hard way, by a real `runIde` crash -- not
  * copied here on faith, but because it's the same class of PSI-heavy

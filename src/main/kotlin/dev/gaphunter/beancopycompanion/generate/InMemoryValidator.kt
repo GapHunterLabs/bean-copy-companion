@@ -28,9 +28,9 @@ import org.jetbrains.kotlin.idea.KotlinLanguage
  * the tree), not semantic/type resolution -- same documented scope as
  * Test Scaffold Companion's validator of the same name. Does NOT call
  * `PsiManager.dropPsiCaches()` -- that requires the EDT specifically
- * (confirmed by a real `runIde` crash on Test Scaffold Companion, see
- * `INTELLIJ_PLATFORM_KNOWLEDGE.md`) and [PsiFileFactory.createFileFromText]
- * already returns a fully-parsed tree, so it was never necessary.
+ * (confirmed by a real `runIde` crash on Test Scaffold Companion) and
+ * [PsiFileFactory.createFileFromText] already returns a fully-parsed
+ * tree, so it was never necessary.
  */
 object InMemoryValidator {
 
