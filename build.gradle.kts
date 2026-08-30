@@ -21,9 +21,9 @@ dependencies {
         bundledPlugin("com.intellij.java")
 
         // Kotlin PSI needed both to read Kotlin source/target classes and
-        // to render/validate generated Kotlin copier files. See
-        // SDK_GOTCHAS.md SS3: supportsKotlinPluginMode is required or the
-        // plugin silently fails to load.
+        // to render/validate generated Kotlin copier files.
+        // supportsKotlinPluginMode is required or the plugin silently
+        // fails to load.
         bundledPlugin("org.jetbrains.kotlin")
 
         testFramework(TestFrameworkType.Platform)
@@ -48,7 +48,7 @@ intellijPlatform {
 
     // Catch experimental/internal API usage locally, before Marketplace's
     // own verifier flags it post-upload. Never relax this list without a
-    // documented exception (see AUTOMATION_PLAYBOOK.md SS1.5).
+    // documented exception.
     pluginVerification {
         failureLevel = listOf(
             VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS,
