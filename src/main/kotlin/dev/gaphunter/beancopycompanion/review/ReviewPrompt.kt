@@ -44,14 +44,8 @@ object ReviewPrompt {
 
     private const val NOTIFICATION_GROUP_ID = "Bean Copy Companion"
 
-    // TODO(post-first-publish): Marketplace only assigns a numeric plugin
-    // ID on the first manual submit (queued, see demo/README.md) -- until
-    // then this points at the vendor page so "Rate on Marketplace" still
-    // goes somewhere real instead of a 404. Update to
-    // https://plugins.jetbrains.com/plugin/<id>-__SLUG__/reviews once the
-    // real ID is known (recorded in the same place as the other
-    // post-publish follow-ups).
-    private const val MARKETPLACE_URL = "https://plugins.jetbrains.com/vendor/gap-hunter-labs"
+    // Marketplace listing (real ID resolved after first publish).
+    private const val MARKETPLACE_URL = "https://plugins.jetbrains.com/plugin/33531-bean-copy-companion/reviews"
 
     /**
      * Call this once per real, successful invocation of the action --
