@@ -146,9 +146,8 @@ class GenerateBeanCopyAction : AnAction() {
      * NOT `LangDataKeys.PSI_ELEMENT_ARRAY` -- confirmed live in a real
      * runIde sandbox (2026-08-13) that the Project view's multi-selection
      * DataContext does not populate that key at all (the action stayed
-     * permanently disabled, guessed-but-never-verified API usage, exactly
-     * the kind of mistake `CLAUDE.md` warns about relying on compile
-     * success alone to confirm). `VIRTUAL_FILE_ARRAY` is the more
+     * permanently disabled: an API choice that compiled but was never
+     * checked at run time). `VIRTUAL_FILE_ARRAY` is the more
      * fundamental, universally-populated key for "files selected in a
      * tree" across the whole platform.
      */
